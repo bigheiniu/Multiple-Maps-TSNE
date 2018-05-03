@@ -1,0 +1,26 @@
+#IncludeRegexLine: ^[ 	]*#[ 	]*(include|import)[ 	]*[<"]([^">]+)([">])
+
+#IncludeRegexScan: ^.*$
+
+#IncludeRegexComplain: ^$
+
+#IncludeRegexTransform: 
+
+../include/myslam/MMtsne.h
+
+/Users/bigheiniu/course/graduate_pro/tsne/0.3/test/tsne_main.cpp
+cfloat
+-
+cmath
+-
+cstdlib
+-
+cstdio
+-
+cstring
+-
+ctime
+-
+MMtsne.h
+/Users/bigheiniu/course/graduate_pro/tsne/0.3/test/MMtsne.h
+

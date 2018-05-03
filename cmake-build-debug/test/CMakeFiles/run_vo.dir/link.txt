@@ -1,0 +1,1 @@
+g++   -std=c++11 -march=native -O0 -g -Wl,-search_paths_first -Wl,-headerpad_max_install_names  CMakeFiles/run_vo.dir/tsne_main.cpp.o  -o ../../bin/run_vo  ../../lib/libmyslam.dylib 

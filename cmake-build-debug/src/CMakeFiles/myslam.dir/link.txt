@@ -1,0 +1,1 @@
+g++  -std=c++11 -march=native -O0 -g -dynamiclib -Wl,-headerpad_max_install_names  -o ../../lib/libmyslam.dylib -install_name /Users/bigheiniu/course/graduate_pro/tsne/0.3/lib/libmyslam.dylib CMakeFiles/myslam.dir/MMtsne.cpp.o 
