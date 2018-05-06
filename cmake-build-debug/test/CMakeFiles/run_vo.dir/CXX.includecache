@@ -7,8 +7,10 @@
 #IncludeRegexTransform: 
 
 ../include/myslam/MMtsne.h
+string
+-
 
-/Users/bigheiniu/course/graduate_pro/tsne/0.3/test/tsne_main.cpp
+/Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/test/tsne_main.cpp
 cfloat
 -
 cmath
@@ -22,5 +24,5 @@ cstring
 ctime
 -
 MMtsne.h
-/Users/bigheiniu/course/graduate_pro/tsne/0.3/test/MMtsne.h
+/Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/test/MMtsne.h
 

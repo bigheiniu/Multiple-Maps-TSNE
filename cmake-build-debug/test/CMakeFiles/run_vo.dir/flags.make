@@ -6,5 +6,5 @@ CXX_FLAGS = -std=c++11 -march=native -O0 -g
 
 CXX_DEFINES = 
 
-CXX_INCLUDES = -I/Users/bigheiniu/course/graduate_pro/tsne/0.3/include/myslam 
+CXX_INCLUDES = -I/Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/include/myslam 
 

@@ -48,10 +48,10 @@ RM = /Applications/CLion.app/Contents/bin/cmake/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /Users/bigheiniu/course/graduate_pro/tsne/0.3
+CMAKE_SOURCE_DIR = /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug
+CMAKE_BINARY_DIR = /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,14 +80,14 @@ edit_cache/fast: edit_cache
 
 # The main all target
 all: cmake_check_build_system
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_progress_start /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug/CMakeFiles /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug/test/CMakeFiles/progress.marks
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/all
-	$(CMAKE_COMMAND) -E cmake_progress_start /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug/CMakeFiles 0
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(CMAKE_COMMAND) -E cmake_progress_start /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug/CMakeFiles /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug/test/CMakeFiles/progress.marks
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug/CMakeFiles 0
 .PHONY : all
 
 # The main clean target
 clean:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/clean
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/clean
 .PHONY : clean
 
 # The main clean target
@@ -97,22 +97,22 @@ clean/fast: clean
 
 # Prepare targets for installation.
 preinstall: all
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/preinstall
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/preinstall
 .PHONY : preinstall
 
 # Prepare targets for installation.
 preinstall/fast:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/preinstall
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/preinstall
 .PHONY : preinstall/fast
 
 # clear depends
 depend:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 1
 .PHONY : depend
 
 # Convenience name for target.
 test/CMakeFiles/run_vo.dir/rule:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/run_vo.dir/rule
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f CMakeFiles/Makefile2 test/CMakeFiles/run_vo.dir/rule
 .PHONY : test/CMakeFiles/run_vo.dir/rule
 
 # Convenience name for target.
@@ -122,7 +122,7 @@ run_vo: test/CMakeFiles/run_vo.dir/rule
 
 # fast build rule for target.
 run_vo/fast:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/build
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/build
 .PHONY : run_vo/fast
 
 tsne_main.o: tsne_main.cpp.o
@@ -131,7 +131,7 @@ tsne_main.o: tsne_main.cpp.o
 
 # target to build an object file
 tsne_main.cpp.o:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/tsne_main.cpp.o
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/tsne_main.cpp.o
 .PHONY : tsne_main.cpp.o
 
 tsne_main.i: tsne_main.cpp.i
@@ -140,7 +140,7 @@ tsne_main.i: tsne_main.cpp.i
 
 # target to preprocess a source file
 tsne_main.cpp.i:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/tsne_main.cpp.i
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/tsne_main.cpp.i
 .PHONY : tsne_main.cpp.i
 
 tsne_main.s: tsne_main.cpp.s
@@ -149,7 +149,7 @@ tsne_main.s: tsne_main.cpp.s
 
 # target to generate assembly for a file
 tsne_main.cpp.s:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(MAKE) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/tsne_main.cpp.s
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(MAKE) -f test/CMakeFiles/run_vo.dir/build.make test/CMakeFiles/run_vo.dir/tsne_main.cpp.s
 .PHONY : tsne_main.cpp.s
 
 # Help Target
@@ -175,6 +175,6 @@ help:
 # No rule that depends on this can have commands that come from listfiles
 # because they might be regenerated.
 cmake_check_build_system:
-	cd /Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
+	cd /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug && $(CMAKE_COMMAND) -H$(CMAKE_SOURCE_DIR) -B$(CMAKE_BINARY_DIR) --check-build-system CMakeFiles/Makefile.cmake 0
 .PHONY : cmake_check_build_system
 

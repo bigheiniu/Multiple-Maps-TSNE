@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/Users/bigheiniu/course/graduate_pro/tsne/0.3/src/MMtsne.cpp" "/Users/bigheiniu/course/graduate_pro/tsne/0.3/cmake-build-debug/src/CMakeFiles/myslam.dir/MMtsne.cpp.o"
+  "/Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/src/MMtsne.cpp" "/Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/cmake-build-debug/src/CMakeFiles/myslam.dir/MMtsne.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "Clang")
 

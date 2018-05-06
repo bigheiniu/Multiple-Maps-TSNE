@@ -1,4 +1,4 @@
-# Install script for directory: /Users/bigheiniu/course/graduate_pro/tsne/0.3/test
+# Install script for directory: /Users/bigheiniu/course/graduate_pro/tsne/Multiple-Maps-TSNE/test
 
 # Set the install prefix
 if(NOT DEFINED CMAKE_INSTALL_PREFIX)
