@@ -15,15 +15,7 @@
 #define EPS 1e-8
 #endif
 
-#ifdef _OPENMP
-#include <omp.h>
-#endif
 
-#ifdef _OPENMP
-#define NUM_THREADS(N) ((N) >= 0 ? (N) : omp_get_num_procs() + (N) + 1)
-#else
-#define NUM_THREADS(N) (1)
-#endif
 
 
 using namespace std;
@@ -31,7 +23,7 @@ using namespace std;
 
 
 void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims,int no_maps, double perplexity, double theta, int rand_seed,
-                 bool skip_random_init, int max_iter, int stop_lying_iter, int mom_switch_iter, int num_threads) {
+                 bool skip_random_init, int max_iter, int stop_lying_iter, int mom_switch_iter) {
 
     // Set random seed
     if (skip_random_init != true) {
@@ -45,12 +37,6 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
     }
 
 
-#ifdef _OPENMP
-    omp_set_num_threads(NUM_THREADS(num_threads));
-#if _OPENMP >= 200805
-    omp_set_schedule(omp_sched_guided, 0);
-#endif
-#endif // 设置 openMP 进程数量
 
     // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { printf("Perplexity too large for the number of data points!\n"); exit(1); }
@@ -90,7 +76,7 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
     P = new double[N * N];
     if(P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     computeGaussianPerplexity(X, N, D, P, perplexity);
-//    loadData(P,10,10,"./Mymatrix.dat");
+
     // Symmetrize input similarities
     printf("Symmetrizing...\n");
     int nN = 0;
@@ -170,9 +156,7 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
 void MMTSNE::computeNumerator(double *X, int N, int D, int no_maps, double *numerator) {
     int N2 = N * N;
     const double* XnD = X;
-#ifdef _OPENMP
-    #pragma omp parallel for
-#endif
+
     for (int n = 0; n < N; ++n, XnD += D) {
          for (int map = 0; map < no_maps; ++map) {
             const double *XmD = XnD + D;
@@ -507,9 +491,6 @@ void MMTSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, doubl
 
     // Compute the Gaussian kernel row by row
     int nN = 0;
-#ifdef _OPENMP
-#pragma omp parallel for
-#endif
     for(int n = 0; n < N; n++) {
 
         // Initialize some variables
@@ -587,11 +568,7 @@ void MMTSNE::computeSquaredEuclideanDistance(double* X, int N, int D, double* DD
 }
 
 void MMTSNE::saveData(double *data, int row, int column, std::string fileName) {
-//    FILE *h;
-//    if((h = fopen("proportions.bat", "w+b")) == NULL) {
-//        printf("Error: could not open data file.\n");
-//        return;
-//    }
+
     ofstream outFile(fileName);
     for(int i=0; i<row; i++){
         for (int j = 0; j <  column; ++j) {
@@ -600,11 +577,6 @@ void MMTSNE::saveData(double *data, int row, int column, std::string fileName) {
         }
         outFile<<"\n";
     }
-//    fwrite(&row, sizeof(int),1,h);
-//    fwrite(&column, sizeof(int),1,h);
-//    fwrite(data, sizeof(double), row * column, h);
-//    fclose(h);
-//    printf("Wrote the %i x %i data matrix successfully!\n", row, column);
 }
 
 bool MMTSNE::loadData(double* data, int row, int colum, std::string fileName) {
