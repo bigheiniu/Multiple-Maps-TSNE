@@ -1,5 +1,5 @@
 cmake_minimum_required( VERSION 2.8 )
-project ( myslam )
+project ( MMtsne )
 
 set( CMAKE_CXX_COMPILER "g++" )
 set( CMAKE_BUILD_TYPE "Debug" )
