@@ -34,6 +34,7 @@
 #ifndef MMTSNE_H
 #define MMTSNE_H
 
+#include <string>
 
 static inline double sign(double x) { return (x == .0 ? .0 : (x < .0 ? -1.0 : 1.0)); }
 
@@ -60,6 +61,8 @@ private:
     double randn();
     void zeroMean(double* X, int N, int D);
     void computeSquaredEuclideanDistance(double* X, int N, int D, double* DD);
+    void saveData(double* data, int row, int columns,std::string fileName);
+    bool loadData(double* data, int row, int columns,std::string fileName);
 };
 
 #endif

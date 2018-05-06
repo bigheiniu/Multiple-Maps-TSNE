@@ -8,9 +8,22 @@
 #include <cstdio>
 #include <cstring>
 #include <ctime>
+#include <string>
+#include <fstream>
 #include "MMtsne.h"
+#ifndef EPS
+#define EPS 1e-8
+#endif
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
 
+#ifdef _OPENMP
+#define NUM_THREADS(N) ((N) >= 0 ? (N) : omp_get_num_procs() + (N) + 1)
+#else
+#define NUM_THREADS(N) (1)
+#endif
 
 
 using namespace std;
@@ -18,7 +31,7 @@ using namespace std;
 
 
 void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims,int no_maps, double perplexity, double theta, int rand_seed,
-                 bool skip_random_init, int max_iter, int stop_lying_iter, int mom_switch_iter) {
+                 bool skip_random_init, int max_iter, int stop_lying_iter, int mom_switch_iter, int num_threads) {
 
     // Set random seed
     if (skip_random_init != true) {
@@ -31,10 +44,19 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
         }
     }
 
+
+#ifdef _OPENMP
+    omp_set_num_threads(NUM_THREADS(num_threads));
+#if _OPENMP >= 200805
+    omp_set_schedule(omp_sched_guided, 0);
+#endif
+#endif // 设置 openMP 进程数量
+
     // Determine whether we are using an exact algorithm
     if(N - 1 < 3 * perplexity) { printf("Perplexity too large for the number of data points!\n"); exit(1); }
     printf("Using no_dims = %d, perplexity = %f, and theta = %f\n", no_dims, perplexity, theta);
     bool exact = (theta == .0) ? true : false;
+
 
     // Set learning parameters
     float total_time = .0;
@@ -44,10 +66,11 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
     double etw = 100.0;
 
     // Allocate some memory
-    double* dCdY    = (double*) malloc(N * no_maps * no_dims * sizeof(double));
-    double* uY    = (double*) malloc(N * no_dims * no_maps * sizeof(double));
-//    double* gains = (double*) malloc(N * no_dims * sizeof(double));
-    double* dCdW = (double*) malloc(N * no_maps * sizeof(double));
+    double* dCdY    = new double[N * no_maps * no_dims];
+    double* uY    = new double[N * no_dims * no_maps ];
+    double* gains = new double [N * no_dims * no_maps];
+    for(int i = 0; i < N * no_dims; i++) gains[i] = 1.0;
+    double* dCdW = new double [N * no_maps];
     if(dCdY == NULL || dCdW == NULL || uY==NULL) { printf("Memory allocation failed!\n"); exit(1); }
 
 
@@ -64,10 +87,10 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
     // Compute input similarities for exact t-SNE
     double* P;
     // Compute similarities
-    P = (double*) malloc(N * N * sizeof(double));
+    P = new double[N * N];
     if(P == NULL) { printf("Memory allocation failed!\n"); exit(1); }
     computeGaussianPerplexity(X, N, D, P, perplexity);
-
+//    loadData(P,10,10,"./Mymatrix.dat");
     // Symmetrize input similarities
     printf("Symmetrizing...\n");
     int nN = 0;
@@ -85,17 +108,15 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
     for(int i = 0; i < N * N; i++) P[i] /= sum_P;
 
     // Initialize solution (randomly)
-
+    //TODO: 为了测试程序
     for(int i = 0; i < N * no_maps * no_dims; ++i) Y[i] = randn() * .0001;
     for(int j = 0; j < N * no_maps; ++j) weight[j] = randn() * .0001;
-
-
+//    loadData(Y,N*no_maps,no_dims,"./Y.dat");
     // Perform main training loop
     end = clock();
     printf("max_iter is %i",max_iter);
     printf("Input similarities computed in %4.2f seconds!\nLearning embedding...\n", (float) (end - start) / CLOCKS_PER_SEC);
     start = clock();
-
     for(int iter = 0; iter < max_iter; iter++) {
 
         // Compute (approximate) gradient
@@ -103,9 +124,11 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
 
         // Update gains
 
-        // Perform gradient update (with momentum and gains)
-//        for(int i = 0; i < N * no_dims; i++) uY[i] = momentum * uY[i] - eta * gains[i] * dY[i];
-//        for(int i = 0; i < N * no_dims; i++)  Y[i] = Y[i] + uY[i];
+//         Perform gradient update (with momentum and gains)
+        for(int i = 0; i < N * no_dims*no_maps; i++) uY[i] = momentum * uY[i] - eta * gains[i] * dCdY[i];
+        for(int i = 0; i < N * no_dims*no_maps; i++)  Y[i] = Y[i] + uY[i];
+
+
 
         for(int i = 0; i < N * no_dims * no_maps; i++) uY[i] = momentum * uY[i] - eta * dCdY[i];
         for(int i = 0; i < N * no_dims * no_maps; ++i) Y[i] = Y[i] + uY[i];
@@ -120,7 +143,7 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
         if(iter == mom_switch_iter) momentum = final_momentum;
 
         // Print out progress
-        if (iter > 0 && (iter % 50 == 0 || iter == max_iter - 1)) {
+        if (iter > 0 && (iter % 10 == 0 || iter == max_iter - 1)) {
             end = clock();
             double NPR = .0;
             NPR = evaluateNPR(P, Y, weight,N,no_dims, no_maps);
@@ -128,7 +151,7 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
                 printf("Iteration %d: NPR is %f\n", iter + 1, NPR);
             else {
                 total_time += (float) (end - start) / CLOCKS_PER_SEC;
-                printf("Iteration %d: NPR is %f (50 iterations in %4.2f seconds)\n", iter, NPR, (float) (end - start) / CLOCKS_PER_SEC);
+                printf("Iteration %d: NPR is %f (100 iterations in %4.2f seconds)\n", iter, NPR, (float) (end - start) / CLOCKS_PER_SEC);
             }
             start = clock();
         }
@@ -136,10 +159,10 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
     end = clock(); total_time += (float) (end - start) / CLOCKS_PER_SEC;
 
     // Clean up memory
-    free(dCdY);
-    free(uY);
-    free(dCdW);
-    if(exact) free(P);
+    delete dCdY;
+    delete uY;
+    delete dCdW;
+    delete P;
     printf("Fitting performed in %4.2f seconds.\n", total_time);
 }
 
@@ -147,8 +170,11 @@ void MMTSNE::run(double *X, int N, int D, double* Y, double* weight, int no_dims
 void MMTSNE::computeNumerator(double *X, int N, int D, int no_maps, double *numerator) {
     int N2 = N * N;
     const double* XnD = X;
-    for (int map = 0; map < no_maps; ++map) {
-        for (int n = 0; n < N; ++n, XnD += D) {
+#ifdef _OPENMP
+    #pragma omp parallel for
+#endif
+    for (int n = 0; n < N; ++n, XnD += D) {
+         for (int map = 0; map < no_maps; ++map) {
             const double *XmD = XnD + D;
             // numerator[N * N * no_maps]
             double *curr_elem = &numerator[n * N + map * N2 + n];
@@ -160,13 +186,12 @@ void MMTSNE::computeNumerator(double *X, int N, int D, int no_maps, double *nume
                     *curr_elem += (XnD[d] - XmD[d]) * (XnD[d] - XmD[d]);
                 }
                 *curr_elem = 1.0 / (1.0  + *curr_elem);
-                double t = *curr_elem;
-                double t1 = *(curr_elem - 1);
                 *curr_elem_sym = *curr_elem;
             }
         }
     }
 
+//    saveData(numerator,N*no_maps,N,"./numertor.txt");
 }
 
 
@@ -175,25 +200,24 @@ void MMTSNE::computeQQ_QZ(double *numerator, double *proportions, double *QQ, do
     //proportions[maps * N]
     //QQ[N, N, no_maps]
     //QZ[N,N] => 需要 calloc 初始为0
+    //numerator => N * N * no_map
     const double* piNi = proportions;
     const double* numerNi = numerator;
     int N2 = N * N;
-    for (int map = 0; map < no_maps; ++map, piNi += N) {
-        for (int n = 0; n < N; ++n,numerNi += N) {
-            double *QQ_elem = &QQ[n * N + (N2 * map) + n];
-            //diag value for QQ and QZ = 0;
-            *QQ_elem = 0.0;
+    for (int map = 0; map < no_maps; ++map) {
+        for (int n = 0; n < N; ++n) {
+            double *QQ_elem = &QQ[(N2 * map) + n * N + n];
             double *QQ_elem_sym= QQ_elem + N;
             double *QZ_elem = &QZ[n * N + n];
             double *QZ_elem_sym = QZ_elem + N;
             for (int m = n + 1; m < N; ++m, QQ_elem_sym += N, QZ_elem_sym+=N) {
                 //保证对角线元素为0
-                *(++QQ_elem) = 0.0;
-                *QQ_elem = (*(piNi + n)) * (*(piNi + m)) * (*(numerNi + m));
+
+                *(++QQ_elem) = (*(piNi + map * N + n)) * (*(piNi + map * N + m)) * (*(numerNi + N2 * map + N * n + m));
                 *QQ_elem_sym = *QQ_elem;
                 //m,n
                 *(++QZ_elem) += *QQ_elem;
-                *QZ_elem_sym += *QQ_elem;
+                *QZ_elem_sym = *QZ_elem;
             }
         }
     }
@@ -201,15 +225,16 @@ void MMTSNE::computeQQ_QZ(double *numerator, double *proportions, double *QQ, do
 
 void MMTSNE::computePQ(double*P, double *Q, double *PQ, int N) {
     //P - Q
-    for(int n = 0; n < N; ++n, Q += N, P += N){
+    for(int n = 0; n < N; ++n){
         //PQ 对角线直接为0
         double* PQ_elem = &PQ[n * N + n];
         double* PQ_elem_sym = PQ_elem + N;
-        for(int m = n+1; m < N; ++m, PQ_elem_sym += N, PQ_elem += 1) {
-            *PQ_elem = (*(P + m)) - (*(Q + m));
+        for(int m = n+1; m < N; ++m, PQ_elem_sym += N) {
+            *(++PQ_elem)= (*(P + N * n + m)) - (*(Q +N * n + m));
             *PQ_elem_sym = *PQ_elem;
         }
     }
+//    saveData(PQ,N,N,"PQ.txt");
 }
 
 
@@ -219,11 +244,12 @@ void MMTSNE::computeQ(double *Q, double *QZ, int N) {
     for (int i = 0; i < N2; ++i) {
         sum_q += QZ[i];
     }
+
     for (int n = 0; n < N; ++n) {
         double* q_elem = &Q[n * N + n];
-        const double* qz_elem = QZ + n * N + n;
         *q_elem = 0.0;
         double* q_elem_sym = q_elem + N;
+        const double* qz_elem = QZ + n * N + n;
         for (int m = n + 1; m < N; ++m, q_elem_sym += N) {
             *(++q_elem) = 0.0;
             ++qz_elem;
@@ -237,53 +263,45 @@ void MMTSNE::computeProportions(double* weight, double* proportions, int N, int 
     // propotions[no_maps, N]
     //weight[no_maps, N]
     // calculate sum (exp(π_(i)_m))
-    double* sum_pi = (double*) calloc(N, sizeof(double));
+    double* sum_pi = new double[ N ];
     const double* weight_const = weight;
-    for (int map = 0; map < no_maps; ++map, weight_const += N) {
-        double* pi_elem = &proportions[map * N]; //
+    for (int map = 0; map < no_maps; ++map) {
+
         for (int i = 0; i < N; ++i) {
-            *(pi_elem + i) = exp(-1 * (*(weight_const + i)));
-            *(sum_pi + i) = *(sum_pi + i)  + *(pi_elem + i);
+
+            *(proportions + map * N + i) = exp(-1 * (*(weight_const + N * map + i)));
+            *(sum_pi + i) += *(proportions + map * N + i);
         }
     }
 
     for (int map = 0; map < no_maps; ++map) {
-        double *pi_elem = &proportions[map * N];
         for (int i = 0; i < N; ++i) {
-            double t = *(pi_elem + i);
-            double t1 = *(sum_pi + i);
-            *(pi_elem + i) = (*(pi_elem + i)) / (*(sum_pi + i));
+            *(proportions + N * map + i) = (*(proportions + N * map + i)) / (*(sum_pi + i));
         }
     }
+
+    delete sum_pi;
 }
 
 
 void MMTSNE::computedCdY(double *QQ, double *QZ, double*PQ, double *numerator, double *Y, int N, int D,int no_maps,
                                         double *dCdY) {
-    for(int i =0; i < N * D * no_maps; ++i) dCdY[i] = 0.0;
-    int N2 = N * 2;
     int NxD = N * D;
-    int Nn = 0;
+    int N2 = N * N;
     for(int map = 0; map < no_maps; ++map) {
-        int ND = no_maps * NxD;
-        int NwithoutMap = 0;
         for (int n =0; n < N; ++n) {
-            int MD = no_maps * NxD;
             for (int m = 0; m < N; ++m){
                 if (m != n) {
-                    double mult = QQ[Nn + m] / QZ[NwithoutMap + m] * (-1 * (PQ[NwithoutMap + m])) * numerator[Nn + m];
+                    double mult = 2.0 * QQ[N2*map+n*N+m] / QZ[n*N+m] * (PQ[n*N + m]) * numerator[N2 * map + n*N + m];
                     for (int d = 0; d < D; ++d) {
-                        double Yn_m = Y[ND + d] - Y[MD + d];
-                        dCdY[ND + d] += mult * Yn_m;
+                        double Yn_m = Y[map*NxD + n*D + d] - Y[map * NxD + m*D + d];
+                        dCdY[map*NxD + n*D +d ] += mult * Yn_m;
                     }
                 }
-                MD += D;
             }
-            ND += D;
-            Nn += N;
-            NwithoutMap += N;
         }
     }
+//    saveData(dCdY,N*no_maps,D,"dCdY.txt");
 }
 
 
@@ -310,13 +328,14 @@ void MMTSNE::computedCdW(double *PQ, double *QZ, double *proportions, double *nu
                         }
                         midvalue += multi * proportions[N * map_ex + j] * numertor[ N2 * map_ex + i * N + j];
                     }
-                    double tmp = 2/QZ[i * N + j] * (PQ[i * N + j]);
+                    double tmp = 2.0 /QZ[i * N + j] * (-1.0 *  PQ[i * N + j]);
                     *dCdW_elem += tmp * midvalue;
                 }
             }
             *dCdW_elem = proportions[map * N + i] * (*dCdW_elem);
         }
     }
+//    saveData(dCdW,no_maps,N,"dCdW.txt");
 }
 
 //目前仅仅比较一个最近邻
@@ -332,6 +351,8 @@ double MMTSNE::evaluateNPR(double* P, double* Y, double* weight,int N, int D, in
     if(Q == NULL || PQ == NULL || QZ == NULL || QQ == NULL || proportions == NULL || numerator == NULL) {
         fprintf(stderr, "Memory allocation failed!\n"); exit(1);
     }
+    //给 QZ 赋极小值
+    for(int i = 0; i <N*N; ++i) QZ[i] = EPS;
     computeProportions(weight,proportions,N,no_maps);
     computeNumerator(Y,N,D,no_maps,numerator);
     computeQQ_QZ(numerator,proportions,QQ,QZ,N,D,no_maps);
@@ -384,16 +405,14 @@ void MMTSNE::computeGradient(double *P, double *Y, double *weight, double* dCdW,
     double* proportions = new double[no_maps * N];
     double* numerator = new double[N * N * no_maps];
     //TODO: 加上计算损失函数
-//    double C = 0.;
 
     if (Q == NULL || PQ== NULL ||QZ== NULL ||QQ== NULL ||proportions== NULL  ||numerator==NULL ||PQ ==NULL) {
         fprintf(stderr, "Memory allocation failed!\n"); exit(1);
     }
-//    double* t = &numerator[10];
-//    double* test = t + N;
-//    *test = 1;
+
+    for(int i = 0; i < N * N; ++i) QZ[i] = EPS;
     computeProportions(weight,proportions,N,no_maps);
-    computeNumerator(Y,N,D,no_maps,numerator);
+    computeNumerator(Y,N,D, no_maps, numerator);
     computeQQ_QZ(numerator,proportions,QQ,QZ,N,D,no_maps);
     computeQ(Q,QZ,N);
     computePQ(P,Q,PQ,N);
@@ -488,6 +507,9 @@ void MMTSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, doubl
 
     // Compute the Gaussian kernel row by row
     int nN = 0;
+#ifdef _OPENMP
+#pragma omp parallel for
+#endif
     for(int n = 0; n < N; n++) {
 
         // Initialize some variables
@@ -503,14 +525,14 @@ void MMTSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, doubl
         while(!found && iter < 200) {
 
             // Compute Gaussian kernel row
-            for(int m = 0; m < N; m++) P[nN + m] = exp(-beta * DD[nN + m]);
-            P[nN + n] = DBL_MIN;
+            for(int m = 0; m < N; m++) P[n*N + m] = exp(-beta * DD[n*N + m]);
+            P[n*N + n] = DBL_MIN;
 
             // Compute entropy of current row
             sum_P = DBL_MIN;
-            for(int m = 0; m < N; m++) sum_P += P[nN + m];
+            for(int m = 0; m < N; m++) sum_P += P[n*N + m];
             double H = 0.0;
-            for(int m = 0; m < N; m++) H += beta * (DD[nN + m] * P[nN + m]);
+            for(int m = 0; m < N; m++) H += beta * (DD[n*N + m] * P[n*N + m]);
             H = (H / sum_P) + log(sum_P);
 
             // Evaluate whether the entropy is within the tolerance level
@@ -540,15 +562,15 @@ void MMTSNE::computeGaussianPerplexity(double* X, int N, int D, double* P, doubl
         }
 
         // Row normalize P
-        for(int m = 0; m < N; m++) P[nN + m] /= sum_P;
-        nN += N;
+        for(int m = 0; m < N; m++) P[n*N + m] /= sum_P;
     }
 
     // Clean up memory
-    free(DD); DD = NULL;
+    free(DD);
 }
 void MMTSNE::computeSquaredEuclideanDistance(double* X, int N, int D, double* DD) {
     const double* XnD = X;
+
     for(int n = 0; n < N; ++n, XnD += D) {
         const double* XmD = XnD + D;
         double* curr_elem = &DD[n*N + n];
@@ -562,4 +584,35 @@ void MMTSNE::computeSquaredEuclideanDistance(double* X, int N, int D, double* DD
             *curr_elem_sym = *curr_elem;
         }
     }
+}
+
+void MMTSNE::saveData(double *data, int row, int column, std::string fileName) {
+//    FILE *h;
+//    if((h = fopen("proportions.bat", "w+b")) == NULL) {
+//        printf("Error: could not open data file.\n");
+//        return;
+//    }
+    ofstream outFile(fileName);
+    for(int i=0; i<row; i++){
+        for (int j = 0; j <  column; ++j) {
+            outFile<<data[i * column + j];
+            outFile<<" ";
+        }
+        outFile<<"\n";
+    }
+//    fwrite(&row, sizeof(int),1,h);
+//    fwrite(&column, sizeof(int),1,h);
+//    fwrite(data, sizeof(double), row * column, h);
+//    fclose(h);
+//    printf("Wrote the %i x %i data matrix successfully!\n", row, column);
+}
+
+bool MMTSNE::loadData(double* data, int row, int colum, std::string fileName) {
+    FILE *h;
+    if((h = fopen(fileName.c_str(), "r+b")) == NULL) {
+        printf("Error: could not open data file.\n");
+        return false;
+    }
+    fread(data, sizeof(double), row * colum, h);
+    return true;
 }

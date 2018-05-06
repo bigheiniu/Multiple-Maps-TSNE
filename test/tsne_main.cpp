@@ -26,8 +26,13 @@ int main() {
         for(int n = 0; n < N; n++) landmarks[n] = n;
 
 		// Now fire up the SNE implementation
-		double* Y = (double*) malloc(N * no_dims * no_maps * sizeof(double));
-		double* weight = (double*) malloc(N * no_maps * sizeof(double));
+		double* Y = new double[N* no_maps * no_dims];
+		double* weight = new double[N * no_maps];
+        for (int i = 0; i < no_maps; ++i){
+            for (int j = 0; j < N; j ++) {
+                weight[i * N + j] = 1.0 / (double)no_maps;
+            }
+        }
 //		double* costs = (double*) calloc(N, sizeof(double));
         if(Y == NULL ) { printf("Memory allocation failed!\n"); exit(1); }
 		MMtsne->run(data, N, D, Y, weight, no_dims,no_maps,perplexity, theta, rand_seed, false, max_iter);
@@ -37,9 +42,9 @@ int main() {
 
         // Clean up the memory
 		free(data); data = NULL;
-		free(Y); Y = NULL;
+		delete Y;
 		free(landmarks); landmarks = NULL;
-		free(weight); weight = NULL;
+		delete weight;
     }
     delete(MMtsne);
 }
